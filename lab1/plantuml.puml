@@ -1,0 +1,17 @@
+@startuml
+object "Client"
+object "Worker"
+object "Studio"
+object "Appointment"
+object "Service"
+object "Material"
+object "MaterialService"
+
+"Material" *-- "MaterialService"
+"Service" *-- "MaterialService"
+"Client" *-- "Appointment"
+"Worker" *-- "Appointment"
+"Studio" *-- "Worker"
+"Studio" *-- "Appointment"
+"Service" *-- "Appointment"
+@enduml
