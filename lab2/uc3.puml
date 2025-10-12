@@ -1,0 +1,20 @@
+@startuml
+|Worker|
+start
+
+:Enters system;
+:Asks for inventory info;
+
+|System|
+:Object "Inventory info request";
+
+:Processes search request;
+:Generate a report;
+:Send a report;
+
+|Worker|
+:Object "Conclusion of availability";
+
+:Analysis and summary of results;
+stop
+@enduml

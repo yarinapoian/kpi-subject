@@ -1,0 +1,48 @@
+@startuml
+|Client|
+start
+:Click button "Make an appointment";
+:Choose a service;
+:Select worker;
+:Select date and time;
+:Fill the form (full name, phone number, email);
+
+|Making appointment system|
+:Appointment data;
+:Processing and saving data;
+:Notify worker and client;
+:Notification;
+
+|Client|
+:Read Notification;
+:Arrival for the appointment;
+
+|Worker|
+:Arrival for service;
+
+|Client|
+if ("Service is provided?") then ([Yes])
+  :Service provided;
+elseif ([No])
+  :Waits for providing;
+endif
+
+:Pay for service;
+
+|Making appointment system|
+:Payment;
+:Stores payment data;
+
+|Client|
+:Leaves a review;
+
+|Making appointment system|
+:Review;
+:Stores review in the database;
+:Notifies worker;
+:Notification;
+
+|Worker|
+:Read review;
+stop
+@enduml

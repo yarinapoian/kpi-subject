@@ -1,0 +1,27 @@
+@startuml
+|Client|
+start
+:Enters system;
+:Asks for appointments info;
+
+|System|
+:Appointments info request;
+:Browse previous appointments for client;
+:Appointments list;
+
+|Client|
+:Checks concrete appointment info;
+:Writes a review for the concrete appointment;
+:Submit to the system;
+
+|System|
+:Review;
+:Stores info in the database;
+:Notify worker;
+-> Notification;
+
+|Worker|
+:Reads notification;
+
+stop
+@enduml
