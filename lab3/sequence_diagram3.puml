@@ -1,0 +1,52 @@
+@startuml
+title Materials availability check
+
+skinparam sequenceActorStyle stickman
+skinparam sequenceReferenceBackgroundColor #EFEFEF
+skinparam sequenceArrowThickness 2
+skinparam sequenceParticipant borderThickness 1.5
+
+actor "Worker" as Worker
+participant "AppointmentSystem" as System <<Gateway>>
+participant "AuthService" as Auth <<Service>>
+participant "InventoryService" as InvSvc <<Service>>
+database "Database" as DB
+
+activate Worker
+
+' --- Authorization phase ---
+Worker -> System: enterSystem(phoneNumber)
+activate System
+System -> Auth: sendSMS(phoneNumber)
+    activate Auth
+    Auth --> System: smsSent
+    deactivate Auth
+System --> Worker: requestSMSCode()
+deactivate System
+
+Worker -> System: submitCode(code)
+activate System
+System -> Auth: validateCode(phoneNumber, code)
+    activate Auth
+    Auth --> System: validationSuccess
+    deactivate Auth
+System --> Worker: accessGranted()
+deactivate System
+
+Worker -> System: requestMaterialsInfo()
+activate System
+System -> InvSvc: fetchMaterialsData()
+    activate InvSvc
+    InvSvc -> DB: SELECT * FROM Materials WHERE ...
+        activate DB
+        DB --> InvSvc: materialsData
+        deactivate DB
+    InvSvc --> System: aggregatedMaterialsData
+    deactivate InvSvc
+
+System --> Worker: displayReport(aggregatedData)
+deactivate System
+
+
+deactivate Worker
+@enduml

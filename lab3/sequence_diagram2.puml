@@ -1,0 +1,96 @@
+@startuml
+title Previous appointments info lookup (& review)
+
+skinparam sequenceActorStyle stickman
+skinparam sequenceReferenceBackgroundColor #EFEFEF
+skinparam sequenceArrowThickness 2
+skinparam sequenceParticipant borderThickness 1.5
+
+actor "Client" as Client
+actor "Worker" as Worker
+participant "AppointmentSystem" as System <<Gateway>>
+participant "AuthService" as Auth <<Service>>
+participant "NotificationService" as Notify <<Service>>
+participant "ReviewService" as RevSvc <<Service>>
+database "Database" as DB
+
+activate Client
+
+' --- Authorization phase ---
+Client -> System: enterSystem(phoneNumber)
+activate System
+System -> Auth: sendSMS(phoneNumber)
+    activate Auth
+    Auth --> System: smsSent
+    deactivate Auth
+System --> Client: requestSMSCode()
+deactivate System
+
+Client -> System: submitCode(code)
+activate System
+System -> Auth: validateCode(phoneNumber, code)
+    activate Auth
+    Auth --> System: validationSuccess
+    deactivate Auth
+System --> Client: accessGranted()
+deactivate System
+
+' --- Load appointments list ---
+Client -> System: requestAppointments()
+activate System
+System -> DB: SELECT * FROM Appointments WHERE client_id = ...
+    activate DB
+    DB --> System: appointmentsList
+    deactivate DB
+System --> Client: displayAppointments(appointmentsList)
+deactivate System
+
+opt Client selects specific appointment
+    Client -> System: viewAppointmentDetails(appointmentId)
+    activate System
+    System -> DB: SELECT * FROM Appointments WHERE id = appointmentId
+        activate DB
+        DB --> System: appointmentDetails
+        deactivate DB
+    System --> Client: displayDetails(appointmentDetails)
+    deactivate System
+
+    opt Client wants to leave a review
+        Client -> System: submitReview(appointmentId, reviewText)
+        activate System
+        System -> RevSvc: saveReview(appointmentId, reviewText)
+            activate RevSvc
+            RevSvc -> DB: UPDATE Appointments SET response = reviewText WHERE appointment_id = appointmentId
+                activate DB
+                DB --> RevSvc: reviewSaved
+                deactivate DB
+            RevSvc --> System: reviewConfirmation
+            deactivate RevSvc
+
+        System -> Notify: notifyWorker(newReview)
+            activate Notify
+            Notify --> System: workerNotified
+            deactivate Notify
+
+        System --> Client: reviewAcknowledged()
+        deactivate System
+
+        opt Worker wants to read reviews
+            Worker -> System: viewReviews()
+            activate System
+            System -> RevSvc: viewReviews(workerId)
+                activate RevSvc
+                RevSvc -> DB: SELECT response FROM APPOINTMENTS WHERE worker_id = workerId
+                    activate DB
+                    DB --> RevSvc: reviewsList
+                    deactivate DB
+                RevSvc --> System: reviewsList
+                deactivate RevSvc
+            System --> Worker: displayReviews(reviewsList)
+            deactivate System
+        end
+    end
+end
+
+deactivate Client
+@enduml

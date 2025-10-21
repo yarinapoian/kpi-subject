@@ -1,0 +1,66 @@
+@startuml
+title Client info edit
+
+skinparam sequenceActorStyle stickman
+skinparam sequenceReferenceBackgroundColor #EFEFEF
+skinparam sequenceArrowThickness 2
+skinparam sequenceParticipant borderThickness 1.5
+
+actor "Worker" as Worker
+participant "AppointmentSystem" as System <<Gateway>>
+participant "AuthService" as Auth <<Service>>
+participant "ClientService" as ClientSvc <<Service>>
+database "Database" as DB
+
+activate Worker
+
+' --- Authorization phase ---
+Worker -> System: enterSystem(phoneNumber)
+activate System
+System -> Auth: sendSMS(phoneNumber)
+    activate Auth
+    Auth --> System: smsSent
+    deactivate Auth
+System --> Worker: requestSMSCode()
+deactivate System
+
+Worker -> System: submitCode(code)
+activate System
+System -> Auth: validateCode(phoneNumber, code)
+    activate Auth
+    Auth --> System: validationSuccess
+    deactivate Auth
+System --> Worker: accessGranted()
+deactivate System
+
+' --- Request client info ---
+Worker -> System: requestClientInfo(clientId)
+activate System
+System -> ClientSvc: fetchClientInfo(clientId)
+    activate ClientSvc
+    ClientSvc -> DB: SELECT * FROM Clients WHERE id=...
+        activate DB
+        DB --> ClientSvc: clientData
+        deactivate DB
+    ClientSvc --> System: clientData
+    deactivate ClientSvc
+System --> Worker: displayClientInfo(clientData)
+deactivate System
+
+opt Worker updates client info
+    Worker -> System: submitUpdatedInfo(clientId, updatedData)
+    activate System
+    System -> ClientSvc: updateClientInfo(clientId, updatedData)
+        activate ClientSvc
+        ClientSvc -> DB: UPDATE Clients SET ... WHERE client_id=...
+            activate DB
+            DB --> ClientSvc: updateSuccess
+            deactivate DB
+        ClientSvc --> System: updateConfirmation
+        deactivate ClientSvc
+    System --> Worker: displayUpdatedData(updateConfirmation)
+    deactivate System
+end
+
+deactivate Worker
+@enduml
