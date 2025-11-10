@@ -1,0 +1,45 @@
+@startuml
+actor Client
+actor Worker
+
+(Make an appointment) as make
+(Leave a review) as review
+(Provide beauty services) as services
+(Check appointment review) as check_review
+(See appointments info) as see_appointments
+(Ask for inventory info) as inventory
+(Update client info) as update_info
+(Check client info) as check_info
+(Check client contact data) as contact_data
+(Check client note) as client_note
+(Choose a service) as choose_service
+(Select worker) as select_worker
+(Select date and time) as select_date
+(Fill the form full name, phone number, email) as fill_form
+(See appointment date and time) as see_date
+
+Client --> make
+Client --> review
+make ..> choose_service : use
+make ..> select_worker : use
+make ..> select_date : use
+make ..> fill_form : use
+make ..> see_date : extends
+
+Worker --> services
+Worker --> see_appointments
+Worker --> inventory
+Worker --> update_info
+Worker --> check_info
+Worker --> check_review
+
+services ..> see_appointments : use
+check_review ..> services : use
+update_info ..> check_info : use
+see_appointments .> see_date : extends
+check_info .> contact_data : extends
+check_info .> client_note : extends
+
+see_appointments .> check_info : extends
+
+@enduml
