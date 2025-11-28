@@ -1,0 +1,97 @@
+@startuml
+skinparam componentStyle uml2
+left to right direction
+
+interface "HTTP API" as API
+
+package "IC Ногітки" {
+
+    component Router
+
+    package "AuthService" {
+        component "OTPService"
+        component "AuthService" as AuthComp
+        component "Middleware"
+
+        port auth_in
+        port auth_out
+
+        auth_in -- AuthComp
+        OTPService -- AuthComp
+        AuthComp -- Middleware
+        AuthComp -- auth_out
+    }
+
+    package "Core Services" {
+        component UserService
+        component StudioService
+        component AppointmentService
+        component InventoryService
+
+        port core_in
+        port core_out
+
+        core_in --- UserService
+        core_in --- StudioService
+        core_in --- AppointmentService
+        core_in --- InventoryService
+
+        UserService --- core_out
+        StudioService --- core_out
+        AppointmentService --- core_out
+        InventoryService --- core_out
+    }
+
+    package "Notifications System" {
+        component "Notifications validator" as NotifVal
+        component "ChannelManager"
+        component "EmailChannel"
+        component "PushChannel"
+
+        port notif_in
+
+        notif_in -- NotifVal
+        NotifVal -- ChannelManager
+        ChannelManager -- EmailChannel
+        ChannelManager -- PushChannel
+    }
+
+    package "Data Management System" {
+        component Aggregator
+        component "Target Manager" as TargetMgr
+        component "Connection Manager" as ConnMgr
+        component "DB Connection" as DBConn
+        component "File Connection" as FileConn
+
+        port data_in
+        port data_out_db
+        port data_out_file
+
+        data_in -- Aggregator
+        Aggregator -- TargetMgr
+        Aggregator -- ConnMgr
+        TargetMgr -- ConnMgr
+
+        ConnMgr -- DBConn
+        ConnMgr -- FileConn
+
+        DBConn -- data_out_db
+        FileConn -- data_out_file
+    }
+
+    API -- Router
+    Router -- auth_in
+
+    auth_out -- core_in
+    auth_out -- notif_in
+
+    core_out -- data_in
+}
+
+database "DB"
+database "File Storage"
+
+data_out_db -- DB
+data_out_file -- "File Storage"
+
+@enduml
